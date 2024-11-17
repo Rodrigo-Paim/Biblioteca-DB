@@ -1,0 +1,74 @@
+# Ignorar arquivos e diretórios do Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Ignorar logs
+*.log
+*.out
+
+# Ignorar configurações do IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Ignorar configurações do Eclipse
+*.classpath
+*.project
+*.settings/
+
+# Ignorar arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Ignorar configurações do VS Code
+.vscode/
+
+# Ignorar arquivos do sistema operacional Linux/Mac
+*~
+
+# Ignorar arquivos relacionados ao Swagger gerados durante a execução
+.swagger-codegen/
+
+# Ignorar arquivos de build do Docker
+docker-compose.override.yml
+
+# Ignorar banco de dados H2 (caso seja usado localmente)
+*.h2.db
+*.mv.db
+
+# Ignorar arquivos de ambiente e variáveis sensíveis
+.env
+
+# Ignorar arquivos de cache do Spring Boot
+.spring_boot_devtools_restart_trigger
+.spring-boot-devtools.properties
+
+# Ignorar arquivos Flyway
+flyway.conf
+
+# Ignorar arquivos de cache temporários do Maven
+.mvn/timing.xml
+.mvn/timestamps.xml
+
+# Ignorar diretórios e arquivos específicos do Docker
+docker/
+Dockerfile*
+
+# Ignorar arquivos do sistema operacional Windows
+*.bak
+*.swp
+*.tmp
+*.temp
+
+# Ignorar imagens do Docker locais
+*.tar
+
+# Ignorar arquivos de configuração de deploy
+deployment.yaml

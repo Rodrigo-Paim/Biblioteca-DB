@@ -34,5 +34,4 @@ Antes de começar, você precisará ter instalado em sua máquina:
 Clone o repositório para sua máquina local usando o comando:
 
 ```bash
-git clone https://github.com/seu-usuario/library-management-api.git
-cd library-management-api
+git clone https://github.com/seu-usuario/Biblioteca-DB.git

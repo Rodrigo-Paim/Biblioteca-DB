@@ -8,8 +8,12 @@ import java.util.List;
 
 @Repository
 public interface LivroRepository extends JpaRepository<Livro, Long> {
-    
-    List<Livro> findByAutoresNome(String nomeAutor);
 
-    List<Livro> findByAlugueisIsNull();
+    List<Livro> findByAutores_Id(Long autorId);
+
+    // Busca livros que não estão associados a nenhum aluguel
+    List<Livro> findByIdNotIn(List<Long> alugadosIds);
+
+    // Verifica se já existe um livro com o ISBN
+    boolean existsByIsbn(String isbn);
 }

@@ -1,9 +1,12 @@
 package com.biblioteca.db.controller;
 
+import com.biblioteca.db.dto.LocatarioDTO;
 import com.biblioteca.db.model.Locatario;
 import com.biblioteca.db.service.LocatarioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,36 +14,34 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/locatarios")
+@Validated
 public class LocatarioController {
 
     @Autowired
     private LocatarioService locatarioService;
 
     @PostMapping
-    public Locatario createLocatario(@RequestBody Locatario locatario) {
-        return locatarioService.save(locatario);
+    public ResponseEntity<LocatarioDTO> criarLocatario(@RequestBody @Valid LocatarioDTO locatarioDTO) {
+        LocatarioDTO criado = locatarioService.criarLocatario(locatarioDTO);
+        return ResponseEntity.status(201).body(criado);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Locatario> getLocatarioById(@PathVariable Long id) {
-        return locatarioService.findById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<LocatarioDTO> buscarPorId(@PathVariable Long id) {
+        LocatarioDTO locatario = locatarioService.buscarPorId(id);
+        return ResponseEntity.ok(locatario);
     }
 
     @GetMapping
-    public List<Locatario> getAllLocatarios() {
-        return locatarioService.findAll();
+    public ResponseEntity<List<LocatarioDTO>> listarTodos() {
+        List<LocatarioDTO> locatarios = locatarioService.listarTodos();
+        return ResponseEntity.ok(locatarios);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLocatario(@PathVariable Long id) {
-        try {
-            locatarioService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Void> excluirLocatario(@PathVariable Long id) {
+        locatarioService.excluirLocatario(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

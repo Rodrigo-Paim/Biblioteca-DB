@@ -11,6 +11,8 @@ import java.util.Optional;
 @Repository
 public interface AutorRepository extends JpaRepository<Autor, Long> {
     
-	Optional<Autor> findByNome(String nome);
+	List<Autor> findByNome(String nome);
+
+	boolean existsByCpf(String cpf);
 }
 

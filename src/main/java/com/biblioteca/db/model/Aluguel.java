@@ -1,53 +1,42 @@
 package com.biblioteca.db.model;
 
-import java.time.LocalDate;
-import java.util.List;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.Id;
 
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
 public class Aluguel {
 
-    private Long id;
-    private Locatario locatario;
-    private List<Livro> livros;
-    private LocalDate dataRetirada;
-    private LocalDate dataDevolucao;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
-    public Long getId() {
-        return id;
-    }
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = false)
+    public Date dataRetirada;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Temporal(TemporalType.DATE)
+    public Date dataDevolucao;
 
-    public Locatario getLocatario() {
-        return locatario;
-    }
+    @ManyToOne
+    @JoinColumn(name = "locatario_id", nullable = false)
+    public Locatario locatario;
 
-    public void setLocatario(Locatario locatario) {
-        this.locatario = locatario;
-    }
-
-    public List<Livro> getLivros() {
-        return livros;
-    }
-
-    public void setLivros(List<Livro> livros) {
-        this.livros = livros;
-    }
-
-    public LocalDate getDataRetirada() {
-        return dataRetirada;
-    }
-
-    public void setDataRetirada(LocalDate dataRetirada) {
-        this.dataRetirada = dataRetirada;
-    }
-
-    public LocalDate getDataDevolucao() {
-        return dataDevolucao;
-    }
-
-    public void setDataDevolucao(LocalDate dataDevolucao) {
-        this.dataDevolucao = dataDevolucao;
-    }
+    @ManyToMany
+    @JoinTable(
+            name = "aluguel_livro",
+            joinColumns = @JoinColumn(name = "aluguel_id"),
+            inverseJoinColumns = @JoinColumn(name = "livro_id")
+    )
+    public Set<Livro> livros;
 }

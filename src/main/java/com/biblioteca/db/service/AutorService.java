@@ -70,10 +70,10 @@ public class AutorService {
 
     private Autor toEntity(AutorDTO dto) {
         Autor autor = new Autor();
-        autor.setNome(dto.getNome());
-        autor.setSexo(dto.getSexo());
-        autor.setAnoNascimento(dto.getAnoNascimento());
-        autor.setCpf(dto.getCpf());
+        autor.nome = dto.getNome();
+        autor.sexo = dto.getSexo();
+        autor.anoNascimento  = dto.getAnoNascimento();
+        autor.cpf =  dto.getCpf();
         return autor;
     }
 }

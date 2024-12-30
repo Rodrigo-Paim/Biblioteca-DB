@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -35,6 +36,12 @@ public class AluguelController {
     public ResponseEntity<List<AluguelDTO>> listarTodos() {
         List<AluguelDTO> alugueis = aluguelService.listarTodos();
         return ResponseEntity.ok(alugueis);
+    }
+
+    @GetMapping("/v2/{id}/valor")
+    public ResponseEntity<BigDecimal> getValorAluguel(@PathVariable Long id) {
+        BigDecimal valor = aluguelService.calcularValorAluguel(id);
+        return ResponseEntity.ok(valor);
     }
 }
 

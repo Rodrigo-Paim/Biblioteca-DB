@@ -6,9 +6,11 @@ import lombok.*;
 import java.util.Date;
 import java.util.Set;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
-@Setter
 @Entity
+@Setter
 public class Aluguel {
 
     @Id
@@ -32,4 +34,7 @@ public class Aluguel {
             inverseJoinColumns = @JoinColumn(name = "livro_id")
     )
     private Set<Livro> livros;
+
+    public Aluguel(Long locatarioId, Date dataRetirada, Date dataDevolucao, Long locatarioId1, Set<Long> livrosIds) {
+    }
 }

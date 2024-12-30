@@ -1,13 +1,16 @@
 package com.biblioteca.db.service;
 
 
+import com.biblioteca.db.dto.LocatarioDTO;
 import com.biblioteca.db.model.Locatario;
 import com.biblioteca.db.repository.LocatarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LocatarioService {
@@ -15,25 +18,58 @@ public class LocatarioService {
     @Autowired
     private LocatarioRepository locatarioRepository;
 
-    public Locatario save(Locatario locatario) {
-        return locatarioRepository.save(locatario);
-    }
-
-    public Optional<Locatario> findById(Long id) {
-        return locatarioRepository.findById(id);
-    }
-
-    public List<Locatario> findAll() {
-        return locatarioRepository.findAll();
-    }
-
-    public void delete(Long id) {
-        Optional<Locatario> locatario = locatarioRepository.findById(id);
-        if (locatario.isPresent() && (locatario.get().getAlugueis() == null || locatario.get().getAlugueis().isEmpty())) {
-            locatarioRepository.deleteById(id);
-        } else {
-            throw new IllegalStateException("Locatário possui aluguéis pendentes e não pode ser excluído.");
+    @Transactional
+    public LocatarioDTO criarLocatario(LocatarioDTO locatarioDTO) {
+        if (locatarioRepository.findAll().stream().anyMatch(l -> l.getCpf().equals(locatarioDTO.getCpf()))) {
+            throw new RuntimeException("Locatário já cadastrado com o CPF fornecido");
         }
+
+        Locatario locatario = toEntity(locatarioDTO);
+        locatario = locatarioRepository.save(locatario);
+        return toDTO(locatario);
+    }
+
+    public LocatarioDTO buscarPorId(Long id) {
+        Locatario locatario = locatarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Locatário não encontrado"));
+        return toDTO(locatario);
+    }
+
+    public List<LocatarioDTO> listarTodos() {
+        return locatarioRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void excluirLocatario(Long id) {
+        Locatario locatario = locatarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Locatário não encontrado"));
+
+        locatarioRepository.delete(locatario);
+    }
+
+    private LocatarioDTO toDTO(Locatario locatario) {
+        LocatarioDTO dto = new LocatarioDTO();
+        dto.setId(locatario.getId());
+        dto.setNome(locatario.getNome());
+        dto.setSexo(locatario.getSexo());
+        dto.setTelefone(locatario.getTelefone());
+        dto.setEmail(locatario.getEmail());
+        dto.setDataNascimento(locatario.getDataNascimento());
+        dto.setCpf(locatario.getCpf());
+        return dto;
+    }
+
+    private Locatario toEntity(LocatarioDTO dto) {
+        Locatario locatario = new Locatario();
+        locatario.setNome(dto.getNome());
+        locatario.setSexo(dto.getSexo());
+        locatario.setTelefone(dto.getTelefone());
+        locatario.setEmail(dto.getEmail());
+        locatario.setDataNascimento(dto.getDataNascimento());
+        locatario.setCpf(dto.getCpf());
+        return locatario;
     }
 }
 

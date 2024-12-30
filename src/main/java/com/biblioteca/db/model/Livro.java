@@ -1,67 +1,43 @@
 package com.biblioteca.db.model;
 
-import java.time.LocalDate;
-import java.util.List;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Setter
 public class Livro {
 
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
-    private String nome;
+    @Column(nullable = false)
+    public String nome;
 
-    private String isbn;
+    @Column(unique = true, nullable = false)
+    public String isbn;
 
-    private LocalDate dataPublicacao;
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = false)
+    public Date dataPublicacao;
 
-    private List<Autor> autores;
+    @ManyToMany
+    @JoinTable(
+            name = "autor_livro",
+            joinColumns = @JoinColumn(name = "livro_id"),
+            inverseJoinColumns = @JoinColumn(name = "autor_id")
+    )
+    public Set<Autor> autores;
 
-    private List<Aluguel> alugueis;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public void setIsbn(String isbn) {
-        this.isbn = isbn;
-    }
-
-    public LocalDate getDataPublicacao() {
-        return dataPublicacao;
-    }
-
-    public void setDataPublicacao(LocalDate dataPublicacao) {
-        this.dataPublicacao = dataPublicacao;
-    }
-
-    public List<Autor> getAutores() {
-        return autores;
-    }
-
-    public void setAutores(List<Autor> autores) {
-        this.autores = autores;
-    }
-
-    public List<Aluguel> getAlugueis() {
-        return alugueis;
-    }
-
-    public void setAlugueis(List<Aluguel> alugueis) {
-        this.alugueis = alugueis;
-    }
 }

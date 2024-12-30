@@ -1,61 +1,38 @@
 package com.biblioteca.db.model;
 
-import java.util.List;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Setter
 public class Autor {
 
-    private Long id;
-    private String nome;
-    private String sexo;
-    private int anoNascimento;
-    private String cpf;
-    private List<Livro> livros;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(nullable = false)
+    public String nome;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String sexo;
 
-    public String getNome() {
-        return nome;
-    }
+    @Column(nullable = false)
+    public Integer anoNascimento;
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    @Column(unique = true, nullable = false)
+    public String cpf;
 
-    public String getSexo() {
-        return sexo;
-    }
+    @ManyToMany(mappedBy = "autores")
+    public Set<Livro> livros;
 
-    public void setSexo(String sexo) {
-        this.sexo = sexo;
-    }
-
-    public int getAnoNascimento() {
-        return anoNascimento;
-    }
-
-    public void setAnoNascimento(int anoNascimento) {
-        this.anoNascimento = anoNascimento;
-    }
-
-    public String getCpf() {
-        return cpf;
-    }
-
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
-
-    public List<Livro> getLivros() {
-        return livros;
-    }
-
-    public void setLivros(List<Livro> livros) {
-        this.livros = livros;
-    }
 }

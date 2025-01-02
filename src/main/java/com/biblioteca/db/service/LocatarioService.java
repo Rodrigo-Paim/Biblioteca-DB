@@ -63,12 +63,12 @@ public class LocatarioService {
 
     private Locatario toEntity(LocatarioDTO dto) {
         Locatario locatario = new Locatario();
-        locatario.setNome(dto.getNome());
-        locatario.setSexo(dto.getSexo());
-        locatario.setTelefone(dto.getTelefone());
-        locatario.setEmail(dto.getEmail());
-        locatario.setDataNascimento(dto.getDataNascimento());
-        locatario.setCpf(dto.getCpf());
+        locatario.nome = dto.getNome();
+        locatario.sexo = dto.getSexo();
+        locatario.telefone = dto.getTelefone();
+        locatario.email = dto.getEmail();
+        locatario.dataNascimento = dto.getDataNascimento();
+        locatario.cpf = dto.getCpf();
         return locatario;
     }
 }

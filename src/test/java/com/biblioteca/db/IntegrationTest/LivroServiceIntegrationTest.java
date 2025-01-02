@@ -37,9 +37,9 @@ class LivroServiceIntegrationTest {
     @BeforeEach
     void setUp() {
         autor = new Autor();
-        autor.setNome("Autor1");
-        autor.setCpf("12312312399");
-        autor.setAnoNascimento(1980);
+        autor.nome = "Autor1";
+        autor.cpf = "12312312399";
+        autor.anoNascimento = 1980;
         autorRepository.save(autor);
     }
 

@@ -25,9 +25,9 @@ class AutorRepositoryIntegrationTest {
     @Test
     void deveSalvarERecuperarAutor() {
         Autor autor = new Autor();
-        autor.setNome("Autor1");
-        autor.setCpf("98765432101");
-        autor.setAnoNascimento(1975);
+        autor.nome = "Autor1";
+        autor.cpf = "98765432101";
+        autor.anoNascimento = 1975;
 
         Autor salvo = autorRepository.save(autor);
         assertNotNull(salvo.getId());

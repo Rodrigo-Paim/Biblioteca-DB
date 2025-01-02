@@ -10,7 +10,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Entity
-@Setter
 public class Aluguel {
 
     @Id

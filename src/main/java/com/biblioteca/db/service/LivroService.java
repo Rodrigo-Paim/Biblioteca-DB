@@ -30,18 +30,15 @@ public class LivroService {
 
     @Transactional
     public LivroDTO criarLivro(LivroDTO livroDTO) {
-        // Validação de duplicidade
         if (livroRepository.findAll().stream().anyMatch(l -> l.getIsbn().equals(livroDTO.getIsbn()))) {
             throw new RuntimeException("Livro já cadastrado com o ISBN fornecido");
         }
 
-        // Verifica se ao menos 1 autor foi informado
         if (livroDTO.getAutoresIds() == null || livroDTO.getAutoresIds().isEmpty()) {
             throw new RuntimeException("Um livro deve conter pelo menos 1 autor.");
         }
 
         bookInfoApiService.validarIsbnGoogle(livroDTO.getIsbn());
-        // Se quiser usar a OpenLibrary:
         bookInfoApiService.validarIsbnOpenLibrary(livroDTO.getIsbn());
 
         Livro livro = toEntity(livroDTO);
@@ -78,33 +75,27 @@ public class LivroService {
         Livro livroExistente = livroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Livro não encontrado com ID: " + id));
 
-        // Se desejar, revalidar autores ou ISBN
         if (dto.getAutoresIds() == null || dto.getAutoresIds().isEmpty()) {
             throw new RuntimeException("Um livro deve conter pelo menos 1 autor.");
         }
 
-        // Se o ISBN foi alterado, podemos validar novamente
         if (!livroExistente.getIsbn().equals(dto.getIsbn())) {
             if (livroRepository.existsByIsbn(dto.getIsbn())) {
                 throw new RuntimeException("Já existe um livro cadastrado com esse ISBN.");
             }
-            // Validar no Google Books de novo, se quiser
             bookInfoApiService.validarIsbnGoogle(dto.getIsbn());
         }
 
-        // Atualiza dados
-        livroExistente.setNome(dto.getNome());
-        livroExistente.setIsbn(dto.getIsbn());
-        livroExistente.setDataPublicacao(dto.getDataPublicacao());
+        livroExistente.nome = dto.getNome();
+        livroExistente.isbn = dto.getIsbn();
+        livroExistente.dataPublicacao = dto.getDataPublicacao();
 
-        // Ajusta autores
         Set<Autor> novosAutores = dto.getAutoresIds().stream()
                 .map(autorId -> autorRepository.findById(autorId)
                         .orElseThrow(() -> new RuntimeException("Autor não encontrado: " + autorId)))
                 .collect(Collectors.toSet());
-        livroExistente.setAutores(novosAutores);
+        livroExistente.autores = novosAutores;
 
-        // Salva alterações
         livroExistente = livroRepository.save(livroExistente);
         return toDTO(livroExistente);
     }
@@ -123,14 +114,14 @@ public class LivroService {
 
     private Livro toEntity(LivroDTO dto) {
         Livro livro = new Livro();
-        livro.nome = (dto.getNome());
-        livro.isbn = (dto.getIsbn());
-        livro.dataPublicacao = (dto.getDataPublicacao());
+        livro.nome = dto.getNome();
+        livro.isbn = dto.getIsbn();
+        livro.dataPublicacao = dto.getDataPublicacao();
         Set<Autor> autores = dto.getAutoresIds().stream()
                 .map(id -> autorRepository.findById(id)
                         .orElseThrow(() -> new EntidadeNaoEncontradaException("Autor não encontrado: " + id)))
                 .collect(Collectors.toSet());
-        livro.setAutores(autores);
+        livro.autores = autores;
         return livro;
     }
 

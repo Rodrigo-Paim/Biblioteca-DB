@@ -78,7 +78,6 @@ public class AluguelService {
         LocalDateTime retirada = converterParaLocalDateTime(aluguel.getDataRetirada());
         LocalDateTime devolucao = converterParaLocalDateTime(aluguel.getDataDevolucao());
 
-        // 1) Calcula dias locados
         long diasLocados = ChronoUnit.DAYS.between(retirada.toLocalDate(), devolucao.toLocalDate());
         if (diasLocados < 0) diasLocados = 0;
 

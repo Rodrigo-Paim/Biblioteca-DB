@@ -8,7 +8,7 @@ import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Data
 @Entity
 public class Aluguel {
 

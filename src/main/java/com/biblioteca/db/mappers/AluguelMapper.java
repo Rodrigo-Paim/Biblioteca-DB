@@ -3,7 +3,7 @@ package com.biblioteca.db.mappers;
 import com.biblioteca.db.dto.AluguelDTO;
 import com.biblioteca.db.model.Aluguel;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
 public interface AluguelMapper {

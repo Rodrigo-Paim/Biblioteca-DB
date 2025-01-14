@@ -2,14 +2,14 @@ package com.biblioteca.db.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Data
 @Entity
 public class Locatario {
 

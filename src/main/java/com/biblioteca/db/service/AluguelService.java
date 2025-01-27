@@ -46,9 +46,9 @@ public class AluguelService {
                         .orElseThrow(() -> new EntidadeNaoEncontradaException("Livro não encontrado: " + id)))
                 .collect(Collectors.toSet());
 
-        Aluguel aluguel = toEntity(aluguelDTO);
+        Aluguel aluguel = aluguelMapper.aluguelDtoToEntity(aluguelDTO);
         aluguel = aluguelRepository.save(aluguel);
-        return toDTO(aluguel);
+        return aluguelMapper.aluguelToDto(aluguel);
     }
 
     public AluguelDTO buscarPorId(Long id) {
@@ -59,7 +59,7 @@ public class AluguelService {
 
     public List<AluguelDTO> listarTodos() {
         return aluguelRepository.findAll().stream()
-                .map(this::toDTO)
+                .map(aluguel -> aluguelMapper.aluguelToDto(aluguel))
                 .collect(Collectors.toList());
     }
 

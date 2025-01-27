@@ -2,6 +2,7 @@ package com.biblioteca.db.service;
 
 import com.biblioteca.db.Utils.Exception.EntidadeNaoEncontradaException;
 import com.biblioteca.db.dto.LivroDTO;
+import com.biblioteca.db.mappers.LivroMapper;
 import com.biblioteca.db.model.Autor;
 import com.biblioteca.db.model.Livro;
 import com.biblioteca.db.repository.AutorRepository;
@@ -28,33 +29,55 @@ public class LivroService {
     @Autowired
     private BookInfoApiService bookInfoApiService;
 
+    private LivroMapper livroMapper;
+
     @Transactional
     public LivroDTO criarLivro(LivroDTO livroDTO) {
-        if (livroRepository.findAll().stream().anyMatch(l -> l.getIsbn().equals(livroDTO.getIsbn()))) {
-            throw new RuntimeException("Livro já cadastrado com o ISBN fornecido");
-        }
+        livroJaCadastradoIsbn(livroDTO);
 
-        if (livroDTO.getAutoresIds() == null || livroDTO.getAutoresIds().isEmpty()) {
-            throw new RuntimeException("Um livro deve conter pelo menos 1 autor.");
-        }
+        livroPossuiAutor(livroDTO);
 
         bookInfoApiService.validarIsbnGoogle(livroDTO.getIsbn());
         bookInfoApiService.validarIsbnOpenLibrary(livroDTO.getIsbn());
 
-        Livro livro = toEntity(livroDTO);
+        Livro livro = livroMapper.livroDtoToEntity(livroDTO);
         livro = livroRepository.save(livro);
-        return toDTO(livro);
+        return livroMapper.livroToDto(livro);
     }
 
     public LivroDTO buscarPorId(Long id) {
         Livro livro = livroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Livro não encontrado"));
-        return toDTO(livro);
+        return livroMapper.livroToDto(livro);
     }
 
     public List<LivroDTO> listarTodos() {
         return livroRepository.findAll().stream()
-                .map(this::toDTO)
+                .map(livro -> livroMapper.livroToDto(livro))
+                .collect(Collectors.toList());
+    }
+
+    public List<LivroDTO> listarLivrosDisponiveis() {
+        return livroRepository.findByAlugadoFalse().stream()
+                .map(livro -> livroMapper.livroToDto(livro))
+                .collect(Collectors.toList());
+    }
+
+    public List<LivroDTO> listarLivrosAlugados() {
+        return livroRepository.findByAlugadoTrue().stream()
+                .map(livro -> livroMapper.livroToDto(livro))
+                .collect(Collectors.toList());
+    }
+
+    public List<LivroDTO> listarLivrosPorLocatario(Long locatarioId) {
+        return livroRepository.findByLocatarioId(locatarioId).stream()
+                .map(livro -> livroMapper.livroToDto(livro))
+                .collect(Collectors.toList());
+    }
+
+    public List<LivroDTO> listarLivrosPorAutor(String nomeAutor) {
+        return livroRepository.findByAutorNome(nomeAutor).stream()
+                .map(livro -> livroMapper.livroToDto(livro))
                 .collect(Collectors.toList());
     }
 
@@ -63,9 +86,9 @@ public class LivroService {
         Livro livro = livroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Livro não encontrado"));
 
-        if (!livro.getAutores().isEmpty()) {
-            throw new RuntimeException("Livro não pode ser excluído, pois está associado a autores");
-        }
+        possuiAutores(livro);
+
+        livroEstaAlugado(livro);
 
         livroRepository.delete(livro);
     }
@@ -75,16 +98,9 @@ public class LivroService {
         Livro livroExistente = livroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Livro não encontrado com ID: " + id));
 
-        if (dto.getAutoresIds() == null || dto.getAutoresIds().isEmpty()) {
-            throw new RuntimeException("Um livro deve conter pelo menos 1 autor.");
-        }
+        livroPossuiAutor(dto);
 
-        if (!livroExistente.getIsbn().equals(dto.getIsbn())) {
-            if (livroRepository.existsByIsbn(dto.getIsbn())) {
-                throw new RuntimeException("Já existe um livro cadastrado com esse ISBN.");
-            }
-            bookInfoApiService.validarIsbnGoogle(dto.getIsbn());
-        }
+        possuiIsbn(dto, livroExistente);
 
         livroExistente.nome = dto.getNome();
         livroExistente.isbn = dto.getIsbn();
@@ -97,34 +113,39 @@ public class LivroService {
         livroExistente.autores = novosAutores;
 
         livroExistente = livroRepository.save(livroExistente);
-        return toDTO(livroExistente);
+        return livroMapper.livroToDto(livroExistente);
     }
 
-    private LivroDTO toDTO(Livro livro) {
-        LivroDTO dto = new LivroDTO();
-        dto.setId(livro.getId());
-        dto.setNome(livro.getNome());
-        dto.setIsbn(livro.getIsbn());
-        dto.setDataPublicacao(livro.getDataPublicacao());
-        dto.setAutoresIds(livro.getAutores().stream()
-                .map(Autor::getId)
-                .collect(Collectors.toSet()));
-        return dto;
+    private void livroJaCadastradoIsbn(LivroDTO livroDTO) {
+        if (livroRepository.findAll().stream().anyMatch(l -> l.getIsbn().equals(livroDTO.getIsbn()))) {
+            throw new RuntimeException("Livro já cadastrado com o ISBN fornecido");
+        }
     }
 
-    private Livro toEntity(LivroDTO dto) {
-        Livro livro = new Livro();
-        livro.nome = dto.getNome();
-        livro.isbn = dto.getIsbn();
-        livro.dataPublicacao = dto.getDataPublicacao();
-        Set<Autor> autores = dto.getAutoresIds().stream()
-                .map(id -> autorRepository.findById(id)
-                        .orElseThrow(() -> new EntidadeNaoEncontradaException("Autor não encontrado: " + id)))
-                .collect(Collectors.toSet());
-        livro.autores = autores;
-        return livro;
+    private static void livroPossuiAutor(LivroDTO livroDTO) {
+        if (livroDTO.getAutoresIds() == null || livroDTO.getAutoresIds().isEmpty()) {
+            throw new RuntimeException("Um livro deve conter pelo menos 1 autor.");
+        }
     }
 
+    private static void livroEstaAlugado(Livro livro) {
+        if (livro.isAlugado()) {
+            throw new RuntimeException("Livro não pode ser excluído, pois está alugado");
+        }
+    }
 
+    private static void possuiAutores(Livro livro) {
+        if (!livro.getAutores().isEmpty()) {
+            throw new RuntimeException("Livro não pode ser excluído, pois está associado a autores");
+        }
+    }
+
+    private void possuiIsbn(LivroDTO dto, Livro livroExistente) {
+        if (!livroExistente.getIsbn().equals(dto.getIsbn())) {
+            if (livroRepository.existsByIsbn(dto.getIsbn())) {
+                throw new RuntimeException("Já existe um livro cadastrado com esse ISBN.");
+            }
+            bookInfoApiService.validarIsbnGoogle(dto.getIsbn());
+        }
+    }
 }
-

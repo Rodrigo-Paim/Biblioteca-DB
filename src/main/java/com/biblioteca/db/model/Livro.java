@@ -28,6 +28,9 @@ public class Livro {
     @Column(nullable = false)
     public Date dataPublicacao;
 
+    @Column(nullable = false)
+    public boolean isAlugado;
+
     @ManyToMany
     @JoinTable(
             name = "autor_livro",

@@ -34,6 +34,8 @@ public class Aluguel {
     )
     private Set<Livro> livros;
 
+
+
     public Aluguel(Long locatarioId, Date dataRetirada, Date dataDevolucao, Long locatarioId1, Set<Long> livrosIds) {
     }
 }

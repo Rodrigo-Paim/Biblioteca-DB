@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/autores")
+@RequestMapping("v1/api/autores")
 @Validated
 public class AutorController {
 

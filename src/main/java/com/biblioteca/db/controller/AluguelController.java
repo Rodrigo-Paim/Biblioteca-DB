@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/alugueis")
+@RequestMapping("v1/api/alugueis")
 @Validated
 public class AluguelController {
 

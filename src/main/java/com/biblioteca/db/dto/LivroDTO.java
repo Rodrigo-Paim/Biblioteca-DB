@@ -15,4 +15,5 @@ public class LivroDTO {
     public String isbn;
     public Date dataPublicacao;
     public Set<Long> autoresIds;
+    public boolean isAlugado;
 }

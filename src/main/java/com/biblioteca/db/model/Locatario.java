@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,5 +35,7 @@ public class Locatario {
 
     @Column(unique = true, nullable = false)
     public String cpf;
+
+    public Set<Livro> livros;
 
 }

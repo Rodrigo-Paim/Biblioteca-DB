@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -29,6 +31,6 @@ public class Autor {
     public String cpf;
 
     @ManyToMany(mappedBy = "autores")
-    public Set<Livro> livros;
+    public Set<Livro> livros = new HashSet<>();
 
 }

@@ -1,6 +1,8 @@
 package com.biblioteca.db.UniteTests;
 
 import com.biblioteca.db.dto.LocatarioDTO;
+import com.biblioteca.db.mappers.LocatarioMapper;
+import com.biblioteca.db.model.Livro;
 import com.biblioteca.db.model.Locatario;
 import com.biblioteca.db.repository.LocatarioRepository;
 import com.biblioteca.db.service.LocatarioService;
@@ -9,85 +11,147 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
-@ExtendWith(MockitoExtension.class)
 class LocatarioServiceTest {
-
-    @Mock
-    private LocatarioRepository locatarioRepository;
 
     @InjectMocks
     private LocatarioService locatarioService;
 
-    private Locatario locatario;
-    private LocatarioDTO locatarioDTO;
+    @Mock
+    private LocatarioRepository locatarioRepository;
+
+    @Mock
+    private LocatarioMapper locatarioMapper;
 
     @BeforeEach
-    void setUp() {
-        locatario = new Locatario();
+    void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testCriarLocatario_Sucesso() {
+        LocatarioDTO locatarioDTO = new LocatarioDTO();
+        locatarioDTO.setNome("Locatário Teste");
+        locatarioDTO.setCpf("12345678901");
+
+        Locatario locatario = new Locatario();
         locatario.setId(1L);
-        locatario.setNome("Maria Silva");
-        locatario.setEmail("maria@test.com");
-        locatario.setCpf("98765432100");
-        locatario.setTelefone("11999999999");
+        locatario.setNome("Locatário Teste");
 
-        locatarioDTO = new LocatarioDTO();
-        locatarioDTO.setNome("Maria Silva");
-        locatarioDTO.setEmail("maria@test.com");
-        locatarioDTO.setCpf("98765432100");
-        locatarioDTO.setTelefone("11999999999");
-    }
+        when(locatarioRepository.findAll()).thenReturn(Collections.emptyList());
+        when(locatarioMapper.locatarioDtoToEntity(locatarioDTO)).thenReturn(locatario);
+        when(locatarioRepository.save(locatario)).thenReturn(locatario);
+        when(locatarioMapper.locatarioToDto(locatario)).thenReturn(locatarioDTO);
 
-    @Test
-    void criarLocatario_deveCriarComSucesso() {
-        when(locatarioRepository.save(any(Locatario.class))).thenReturn(locatario);
+        LocatarioDTO resultado = locatarioService.criarLocatario(locatarioDTO);
 
-        LocatarioDTO criado = locatarioService.criarLocatario(locatarioDTO);
-        assertNotNull(criado.getId());
-        verify(locatarioRepository, times(1)).save(any(Locatario.class));
-    }
-
-    @Test
-    void buscarPorId_deveRetornarLocatario() {
-        when(locatarioRepository.findById(1L)).thenReturn(Optional.of(locatario));
-
-        LocatarioDTO resultado = locatarioService.buscarPorId(1L);
         assertNotNull(resultado);
-        assertEquals("Maria Silva", resultado.getNome());
+        assertEquals("Locatário Teste", resultado.getNome());
+        verify(locatarioRepository, times(1)).findAll();
+        verify(locatarioRepository, times(1)).save(locatario);
     }
 
     @Test
-    void buscarPorId_deveLancarExcecaoSeNaoEncontrar() {
-        when(locatarioRepository.findById(2L)).thenReturn(Optional.empty());
+    void testCriarLocatario_Falha_CpfDuplicado() {
+        LocatarioDTO locatarioDTO = new LocatarioDTO();
+        locatarioDTO.setCpf("12345678901");
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> locatarioService.buscarPorId(2L));
-        assertTrue(ex.getMessage().contains("não encontrado"));
+        Locatario locatarioExistente = new Locatario();
+        locatarioExistente.setCpf("12345678901");
+
+        when(locatarioRepository.findAll()).thenReturn(List.of(locatarioExistente));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> locatarioService.criarLocatario(locatarioDTO));
+        assertEquals("Locatário já cadastrado com o CPF fornecido", ex.getMessage());
+        verify(locatarioRepository, times(1)).findAll();
+        verify(locatarioRepository, never()).save(any());
     }
 
     @Test
-    void listarTodos_deveRetornarLista() {
-        when(locatarioRepository.findAll()).thenReturn(Collections.singletonList(locatario));
+    void testExcluirLocatario_Sucesso() {
+        Locatario locatario = new Locatario();
+        locatario.setId(1L);
+        locatario.setLivros(Collections.emptySet());
 
-        var lista = locatarioService.listarTodos();
-        assertEquals(1, lista.size());
-        assertEquals("Maria Silva", lista.get(0).getNome());
-    }
-
-    @Test
-    void excluirLocatario_deveExcluirComSucesso() {
         when(locatarioRepository.findById(1L)).thenReturn(Optional.of(locatario));
 
         locatarioService.excluirLocatario(1L);
+
         verify(locatarioRepository, times(1)).delete(locatario);
+    }
+
+    @Test
+    void testExcluirLocatario_Falha_PossuiLivros() {
+        Locatario locatario = new Locatario();
+        locatario.setId(1L);
+        locatario.setLivros(Set.of(new Livro()));
+
+        when(locatarioRepository.findById(1L)).thenReturn(Optional.of(locatario));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> locatarioService.excluirLocatario(1L));
+        assertEquals("Locatário não pode ser excluído, pois possui livros para devolução", ex.getMessage());
+        verify(locatarioRepository, never()).delete(locatario);
+    }
+
+    @Test
+    void testBuscarPorId_Sucesso() {
+        Locatario locatario = new Locatario();
+        locatario.setId(1L);
+        locatario.setNome("Locatário Teste");
+
+        LocatarioDTO locatarioDTO = new LocatarioDTO();
+        locatarioDTO.setId(1L);
+        locatarioDTO.setNome("Locatário Teste");
+
+        when(locatarioRepository.findById(1L)).thenReturn(Optional.of(locatario));
+        when(locatarioMapper.locatarioToDto(locatario)).thenReturn(locatarioDTO);
+
+        LocatarioDTO resultado = locatarioService.buscarPorId(1L);
+
+        assertNotNull(resultado);
+        assertEquals("Locatário Teste", resultado.getNome());
+        verify(locatarioRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testBuscarPorId_Falha() {
+        when(locatarioRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> locatarioService.buscarPorId(1L));
+        assertEquals("Locatário não encontrado", ex.getMessage());
+        verify(locatarioRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testListarTodos_Sucesso() {
+        Locatario locatario = new Locatario();
+        locatario.setId(1L);
+        locatario.setNome("Locatário Teste");
+
+        LocatarioDTO locatarioDTO = new LocatarioDTO();
+        locatarioDTO.setId(1L);
+        locatarioDTO.setNome("Locatário Teste");
+
+        when(locatarioRepository.findAll()).thenReturn(List.of(locatario));
+        when(locatarioMapper.locatarioToDto(locatario)).thenReturn(locatarioDTO);
+
+        List<LocatarioDTO> resultado = locatarioService.listarTodos();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals("Locatário Teste", resultado.get(0).getNome());
+        verify(locatarioRepository, times(1)).findAll();
     }
 }

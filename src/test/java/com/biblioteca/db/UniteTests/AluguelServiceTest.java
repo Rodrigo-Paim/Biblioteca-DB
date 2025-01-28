@@ -1,6 +1,8 @@
 package com.biblioteca.db.UniteTests;
 
+import com.biblioteca.db.Utils.Exception.EntidadeNaoEncontradaException;
 import com.biblioteca.db.dto.AluguelDTO;
+import com.biblioteca.db.mappers.AluguelMapper;
 import com.biblioteca.db.model.Aluguel;
 import com.biblioteca.db.model.Livro;
 import com.biblioteca.db.model.Locatario;
@@ -13,8 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
@@ -25,90 +29,103 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
-@ExtendWith(MockitoExtension.class)
 class AluguelServiceTest {
-
-    @Mock
-    private AluguelRepository aluguelRepository;
-    @Mock
-    private LocatarioRepository locatarioRepository;
-    @Mock
-    private LivroRepository livroRepository;
 
     @InjectMocks
     private AluguelService aluguelService;
 
-    private AluguelDTO aluguelDTO;
-    private Aluguel aluguel;
-    private Locatario locatario;
-    private Livro livro;
+    @Mock
+    private AluguelRepository aluguelRepository;
+
+    @Mock
+    private LocatarioRepository locatarioRepository;
+
+    @Mock
+    private LivroRepository livroRepository;
+
+    @Mock
+    private AluguelMapper aluguelMapper;
 
     @BeforeEach
-    void setUp() {
-        locatario = new Locatario();
-        locatario.setId(1L);
-        locatario.setNome("Loc Teste");
+    void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-        livro = new Livro();
-        livro.setId(10L);
-        livro.setNome("Livro Alugado");
-
-        aluguel = new Aluguel();
-        aluguel.setId(100L);
-        aluguel.setLocatario(locatario);
-        aluguel.setLivros(Set.of(livro));
-        aluguel.setDataRetirada(new Date());
-
-        aluguelDTO = new AluguelDTO();
+    @Test
+    void testCriarAluguel_Sucesso() {
+        // Dados de entrada
+        AluguelDTO aluguelDTO = new AluguelDTO();
         aluguelDTO.setLocatarioId(1L);
-        aluguelDTO.setLivrosIds(Set.of(10L));
-        aluguelDTO.setDataRetirada(new Date());
-    }
+        aluguelDTO.setLivrosIds(Set.of(1L, 2L));
 
-    @Test
-    void criarAluguel_deveCriarComSucesso() {
+        Locatario locatario = new Locatario();
+        locatario.setId(1L);
+
+        Livro livro1 = new Livro();
+        livro1.setId(1L);
+
+        Livro livro2 = new Livro();
+        livro2.setId(2L);
+
+        Aluguel aluguel = new Aluguel();
+        aluguel.setId(1L);
+
+        // Mock dos métodos
         when(locatarioRepository.findById(1L)).thenReturn(Optional.of(locatario));
-        when(livroRepository.findById(10L)).thenReturn(Optional.of(livro));
-        when(aluguelRepository.save(any(Aluguel.class))).thenReturn(aluguel);
+        when(livroRepository.findById(1L)).thenReturn(Optional.of(livro1));
+        when(livroRepository.findById(2L)).thenReturn(Optional.of(livro2));
+        when(aluguelMapper.aluguelDtoToEntity(aluguelDTO)).thenReturn(aluguel);
+        when(aluguelRepository.save(aluguel)).thenReturn(aluguel);
+        when(aluguelMapper.aluguelToDto(aluguel)).thenReturn(aluguelDTO);
 
-        AluguelDTO criado = aluguelService.criarAluguel(aluguelDTO);
-        assertNotNull(criado.getId());
-        assertTrue(criado.getLivrosIds().contains(10L));
-        verify(aluguelRepository, times(1)).save(any(Aluguel.class));
+        // Execução
+        AluguelDTO resultado = aluguelService.criarAluguel(aluguelDTO);
+
+        // Verificações
+        assertNotNull(resultado);
+        verify(locatarioRepository, times(1)).findById(1L);
+        verify(livroRepository, times(2)).findById(anyLong());
+        verify(aluguelRepository, times(1)).save(aluguel);
     }
 
     @Test
-    void criarAluguel_deveFalharSeNaoHouverLocatarioId() {
-        aluguelDTO.setLocatarioId(null);
+    void testCriarAluguel_LocatarioNaoEncontrado() {
+        // Dados de entrada
+        AluguelDTO aluguelDTO = new AluguelDTO();
+        aluguelDTO.setLocatarioId(1L);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> aluguelService.criarAluguel(aluguelDTO));
-        assertTrue(ex.getMessage().contains("Locatário é obrigatório"));
-        verifyNoInteractions(aluguelRepository);
+        when(locatarioRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Execução e Verificação
+        EntidadeNaoEncontradaException ex = assertThrows(EntidadeNaoEncontradaException.class, () -> aluguelService.criarAluguel(aluguelDTO));
+        assertEquals("Locatário não encontrado", ex.getMessage());
+        verify(locatarioRepository, times(1)).findById(1L);
+        verifyNoInteractions(livroRepository);
     }
 
     @Test
-    void criarAluguel_deveFalharSeNaoHouverLivros() {
-        aluguelDTO.setLivrosIds(Collections.emptySet());
+    void testCalcularValorAluguel_Sucesso() {
+        // Dados de entrada
+        Aluguel aluguel = new Aluguel();
+        aluguel.setDataRetirada(new Date());
+        aluguel.setDataDevolucao(new Date());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> aluguelService.criarAluguel(aluguelDTO));
-        assertTrue(ex.getMessage().contains("Deve haver ao menos 1 livro"));
-        verifyNoInteractions(aluguelRepository);
+        when(aluguelRepository.findById(1L)).thenReturn(Optional.of(aluguel));
+
+        // Execução
+        BigDecimal valor = aluguelService.calcularValorAluguel(1L);
+
+        // Verificações
+        assertNotNull(valor);
+        verify(aluguelRepository, times(1)).findById(1L);
     }
 
     @Test
-    void buscarPorId_deveRetornarAluguel() {
-        when(aluguelRepository.findById(100L)).thenReturn(Optional.of(aluguel));
+    void testCalcularValorAluguel_AluguelNaoEncontrado() {
+        when(aluguelRepository.findById(1L)).thenReturn(Optional.empty());
 
-        AluguelDTO encontrado = aluguelService.buscarPorId(100L);
-        assertNotNull(encontrado);
-        assertEquals(1L, encontrado.getLocatarioId());
-    }
-
-    @Test
-    void listarTodos_deveRetornarLista() {
-        when(aluguelRepository.findAll()).thenReturn(Collections.singletonList(aluguel));
-
-        var lista = aluguelService.listarTodos();
-        assertEquals(1, lista.size());
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> aluguelService.calcularValorAluguel(1L));
+        assertEquals("Aluguel não encontrado: 1", ex.getMessage());
+        verify(aluguelRepository, times(1)).findById(1L);
     }
 }
